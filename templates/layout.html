@@ -38,7 +38,7 @@
             <li>p
               <a class="nav-link">                      </a>
             </li>
-            {% if session['id'] %}
+            {% if session['user_name'] %}
             <li><span class="nav-link" >{{ session['user_name'] }}</span>
             <li><a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
             {% else %}

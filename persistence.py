@@ -1,16 +1,16 @@
 # import place here
-import shelve
-import uuid  # (random id generator)
+import sqlite3
+  # (random id generator)
 import smtplib
 # class and stuff
 
 
 class User:
-    def __init__(self, id):
+    def __init__(self, id, username, email, password):
         self.__id = id
-        self.__username = ''
-        self.__email = ''
-        self.__password = ''
+        self.__username = username
+        self.__email = email
+        self.__password = password
 
     def get_id(self):
         return self.__id
@@ -34,52 +34,76 @@ class User:
         self.__password = password
 
 
-users = shelve.open('user')
+conn = sqlite3.connect('user.db')
+
+c = conn.cursor()
+
+  #  c.execute("""CREATE TABLE user (
+   #             id text,
+    #            username text,
+      #          email text,
+       #         password text
+      #          )""")
+
+# emp_1 = Employee('John', 'Doe', 50000)
+# emp_2 = Employee('Jane', 'Doe', 90000)
 
 
-def create_user(username, email, password):
-    id = str(uuid.uuid4())
-    user = User(id)
-    user.set_username(username)
-    user.set_email(email)
-    user.set_password(password)
-    users[id] = user
-
-
-def check_user(username):
-    key_list = list(users.keys())
-    for key in key_list:
-        user = users[key]
-        print(user.get_username(), username)
-        if user.get_username() == username:
-            return False
+def create_user(id, username, email, password):
+    emp_1 = User(id, username, email, password)
+    c.execute("INSERT INTO user VALUES(?, ?, ?, ?)", (emp_1.get_id(), emp_1.get_username(), emp_1.get_email(), emp_1.get_password()))
+    conn.commit()
 
 
 def get_user(username, password):
-    key_list = list(users.keys())
-    for key in key_list:
-        user = users[key]
-        print(user.get_username(), username, user.get_password(), password)
-        if user.get_username() == username and user.get_password() == password:
-            return user
-    return None
+    g = c.execute("SELECT * FROM user WHERE username=? AND password=?", (username, password))
+    conn.commit()
+    if g is None:
+        return None
+    else:
+        for row in g:
+            print(row)
+            if username in row[1] and password in row[3]:
+                return username
+        return None
+
+
+    #get_all = c.fetchall()
+    #for s in get_all:
+        #conn.commit()
+        #if s[1] == username and s[3] == password:
+            #return True
+
+#    u3 = c.execute("SELECT id, username, email, password FROM user WHERE username = '(?)',(u10)")
+#    p3 = c.execute("SELECT password FROM user")
+# get the id from the username and match password
+# use the classes to be the variables of the insert values
+# make sure use random id generator as the first column
+# run the create table first then hashtag it after
+
+
+def check_user(username, email):
+    k = c.execute("SELECT * FROM user")
+    conn.commit()
+    for row in k:
+        print(row)
+        if row[1] == username and row[2] == email:
+            return False
+
 
 # after forget password send email and user got password, add a back button for user to go back
 
 
 def clear_user():
-    key_list = list(users.keys())
-    for key in key_list:
-        del users[key]
+    c.execute("DELETE FROM user")
+    conn.commit()
 
 
-def forget_password(email):
-    key_list = list(users.keys())
-    for key in key_list:
-        user = users[key]
-        print(user.get_email, email)
-        if user.get_email() == email:
-            password = users[user.get_id][user.get_password]
+def forget_passwords(email):
+    d = c.execute("SELECT * FROM user")
+    conn.commit()
+    for row in d:
+        print(row)
+        if email == row[2]:
+            password = row[3]
             return password
-
-

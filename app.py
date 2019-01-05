@@ -1,6 +1,7 @@
 from persistence import *
 import functools
 from flask import *
+import uuid
 app = Flask(__name__)
 app.config.from_mapping(
     SECRET_KEY='dev'
@@ -52,9 +53,8 @@ def login():
             user = get_user(username, password)
             if user is None:
                 error = 'Wrong credentials'
-            else:
-                session['id'] = user.get_id()
-                session['user_name'] = user.get_username()
+            elif user == username:
+                session['user_name'] = username
                 flash('You successfully logged in!')
                 return redirect(url_for('profile'))
         flash(error)
@@ -76,11 +76,12 @@ def signup():
         elif not email:
             error = 'Email required'
         else:
-            validation = check_user(username)
+            validation = check_user(username, email)
             if validation is False:
-                error = 'Username has already been taken'
+                error = 'Username/Email has already been taken'
             else:
-                create_user(username, email, password)
+                id = str(uuid.uuid4())
+                create_user(id, username, email, password)
                 flash('You have successfully signed up!')
                 return redirect(url_for('login'))
         flash(error)
@@ -91,8 +92,8 @@ def signup():
 def forget_password():
     if request.method == 'POST':
         email = request.form['email']
-        retrieve = forget_password(email)
-        flash(retrieve)
+        p = forget_passwords(email)
+        flash(p)
     return render_template('forget_password.html')
 
 
